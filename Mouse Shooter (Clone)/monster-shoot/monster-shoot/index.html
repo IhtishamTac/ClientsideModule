@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas {
+            cursor: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.querySelector("#canvas")
+            const ctx = canvas.getContext("2d")
+
+            const { width, height } = canvas
+
+            const canvasRect = canvas.getBoundingClientRect()
+
+            const backgroundImage = new Image;
+            backgroundImage.src = "background.jpg"
+
+            const crosshairImage = new Image;
+            crosshairImage.src = "crosshair.svg"
+            const crosshair = {
+                width: 50,
+                height: 50,
+                x: width / 2,
+                y: height / 2,
+            }
+
+            const treeImage = new Image;
+            treeImage.src = "tree.png"
+
+            const rockImage = new Image;
+            rockImage.src = "rock.png"
+
+            const monsterImage = new Image;
+            monsterImage.src = "monster.png"
+            let monsters = []
+            const monsterTemplates = [
+                {
+                    from: { x: 80, y: height - 500 },
+                    to: { x: 100, y: height - 500 },
+                    show_duration: 5000,
+                },
+                {
+                    from: { x: 100, y: height - 300 },
+                    to: { x: 150, y: height - 300 },
+                    show_duration: 1000,
+                },
+                {
+                    from: { x: 230, y: height - 200 },
+                    to: { x: 280, y: height - 200 },
+                    show_duration: 1000,
+                },
+                {
+                    from: { x: width - 280, y: height - 200 },
+                    to: { x: width - 350, y: height - 200 },
+                    show_duration: 1000,
+                },
+                {
+                    from: { x: width - 150, y: height - 500 },
+                    to: { x: width - 180, y: height - 500 },
+                    show_duration: 1000,
+                },
+                {
+                    from: { x: width - 180, y: height - 300 },
+                    to: { x: width - 230, y: height - 300 },
+                    show_duration: 1000,
+                },
+            ]
+
+            const fpsLimit = 120
+            let previousDelta
+            const draw = (currentDelta) => {
+                requestAnimationFrame(draw)
+
+                const delta = currentDelta - previousDelta;
+
+                if (delta < 1000 / fpsLimit) {
+                    return
+                }
+
+                process(delta)
+
+                previousDelta = currentDelta
+            }
+
+            const process = (delta) => {
+                ctx.clearRect(0, 0, width, height)
+
+                ctx.drawImage(backgroundImage, 0, 0, width, height)
+
+                drawMonster(delta)
+
+                ctx.drawImage(treeImage, 0, height - 500, 200, 400)
+                ctx.drawImage(treeImage, width - 200, height - 500, 200, 400)
+
+                ctx.drawImage(rockImage, width / 2 - 200, height / 2 + 50, 100, 150)
+                ctx.drawImage(rockImage, width / 2 + 100, height / 2 + 50, 100, 150)
+
+                drawScore()
+
+                ctx.drawImage(crosshairImage, crosshair.x, crosshair.y, crosshair.width, crosshair.height)
+
+                ctx.restore()
+            }
+
+            const tween = (node, to, delta) => {
+                if (node.x < to.x) {
+                    node.x += 2
+                } else if (node.x > to.x) {
+                    node.x -= 2
+                }
+                if (node.y < to.y) {
+                    node.y += 2
+                } else if (node.y > to.y) {
+                    node.y -= 2
+                }
+
+                return node.x == to.x && node.y == to.y
+            }
+
+            const drawMonster = (delta) => {
+                for (let i = 0; i < monsters.length; i++) {
+                    const monster = monsters[i]
+                    const isDone = tween(monster, monster.has_showed ? monster.from : monster.to, delta)
+                    if (isDone) {
+                        if (!monster.has_showed) {
+                            if (monster.show_duration - delta <= 0) {
+                                monster.has_showed = true
+                            }
+                            monster.show_duration -= delta
+                        } else {
+                            monster.hide = true
+                        }
+                    }
+                    ctx.drawImage(monsterImage, monster.x, monster.y, monster.width, monster.height)
+                }
+                removeHideMonster()
+                waveCheck()
+            }
+
+            let newWave = true
+            let waveGacha = 3
+            const waveCheck = () => {
+                if (monsters.length == 0) {
+                    newWave = true
+                }
+
+                if (!newWave) return
+                
+                let blockedIndex = [];
+                newWave = false
+
+                for (let i=0; i<waveGacha; i++) {
+                    const index = Math.floor(Math.random() * 100) % monsterTemplates.length
+
+                    console.log()
+
+                    if (!blockedIndex.includes(index)) {
+                        spawnMonster(monsterTemplates[index])
+                    }
+
+                    blockedIndex.push(index)
+                }
+            }
+
+            const removeHideMonster = () => {
+                for (let i=0; i<monsters.length; i++) {
+                    if (monsters[i].hide) {
+                        monsters.splice(i, 1)
+                    }
+                }
+            }
+
+            const spawnMonster = (template) => {
+                monsters.push(Object.assign({
+                    x: template.from.x,
+                    y: template.from.y,
+                    hide: false,
+                    has_showed: false,
+                    width: 70,
+                    height: 80,
+                }, template))
+            }
+
+            let score = 0;
+            const drawScore = (e) => {
+                ctx.save()
+                ctx.fillStyle = "white"
+                ctx.font = "20px Arial"
+                ctx.fillText("Score: " + score, width / 2, 30)
+                ctx.restore()
+            }
+
+            const getMonsterClickedIndex = (e) => {
+                for (let i=0; i<monsters.length; i++) {
+                    const monster = monsters[i]
+                    
+                    const mouseX = e.clientX - canvasRect.x - crosshair.width / 2
+                    const mouseY = e.clientY - canvasRect.y - crosshair.height / 2
+
+                    const clicked = mouseX < monster.x + monster.width / 2 && 
+                    mouseX + monster.width / 2 > monster.x &&
+                    mouseY < monster.y + monster.height / 2 &&
+                    mouseY + monster.height / 2 > monster.y
+
+                    if (clicked) {
+                        return i
+                    }
+                }
+
+                return -1
+            }
+
+            canvas.onmousemove = (e) => {
+                crosshair.x = e.clientX - canvasRect.x - crosshair.width / 2
+                crosshair.y = e.clientY - canvasRect.y - crosshair.height / 2
+            }
+
+            canvas.onmousedown = (e) => {
+                const index = getMonsterClickedIndex(e)
+
+                if (index == -1) return
+
+                monsters.splice(index, 1)
+                score += 10
+            }
+
+            requestAnimationFrame(draw)
+        })()
+    </script>
+</body>
+
+</html>

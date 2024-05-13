@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>aa</title>
+    <style>
+      #canvas {
+        display: block;
+        margin: 0 auto;
+        background-image: url("asset/forest.webp");
+        background-size: cover;
+        background-position: top;
+      }
+      .currentScore {
+        display: flex;
+        justify-content: center;
+      }
+      .wrap{
+        opacity: 0;
+      }
+      .mainMenu{
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mainMenu" id="mainMenu">
+        <input type="text" id="inputName">
+      <button id="btnPlay" style="width: 100px; height: 50px">Play</button>
+    </div>
+    <div class="wrap" id="wrap">
+      <canvas id="canvas" width="1000" height="600"></canvas>
+      <div class="currentScore">
+        <p id="score" style="font-size: 50px; top: 0; color: rgb(0, 0, 0)">0</p>
+      </div>
+    </div>
+
+    <script src="object/enemy.js"></script>
+    <script src="object/bird.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>

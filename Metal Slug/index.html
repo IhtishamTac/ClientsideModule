@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Shoter</title>
+    <style>
+        .center{
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mainMenu" id="mainMenu">
+        <button id="playGame">Play game</button>
+        <div class="highscore" id="highscore">
+            <p>10500</p>
+        </div>
+    </div>
+    
+    <div class="center">
+        <canvas id="canvas" width="1000" height="700" style="background-image: url('asset/bg.png'); display: none;"></canvas>
+    </div>
+
+    <script src="playerAnimation.js"></script>
+    <script src="bullet.js"></script>
+    <script src="enemy.js"></script>
+    <script src="index.js"></script>
+    <script src="playerMove.js"></script>
+</body>
+</html>
